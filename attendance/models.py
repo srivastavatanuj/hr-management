@@ -4,9 +4,12 @@ from employee.models import Employee
 # Create your models here.
 class Attendance(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name="attendance")
-    date = models.DateField()  # Date of the attendance record
-    on_leave = models.BooleanField(default=False)  # Indicates if the employee is on leave
+    date = models.DateField(auto_now_add=True)  
+    status = models.CharField(max_length=100,choices=[('wfo','Working Office'),('wfh','Work From Home'),('leave','Leave'),('abs','Absent'),('fhw',"First-Half Working"),('shw',"Second-Half Working")],default='abs') # Indicates if the employee is on leave
+
+
+    class Meta:
+        unique_together = ('employee', 'date',)
 
     def __str__(self):
-        status = "On Leave" if self.on_leave else "Present"
-        return f"{self.employee.full_name} - {self.date} ({status})"
+        return f"{self.employee.full_name} - {self.date} ({self.status})"

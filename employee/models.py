@@ -18,7 +18,7 @@ class Employee(AbstractBaseUser,PermissionsMixin):
     is_manager=models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["full_name", "phone"]
+    REQUIRED_FIELDS = ["full_name","id"]
 
     objects=CustomAuthManager()
 
