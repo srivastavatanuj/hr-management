@@ -1,4 +1,3 @@
-from telnetlib import STATUS
 from django.shortcuts import render
 from rest_framework.generics import CreateAPIView,ListAPIView,UpdateAPIView,RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import AllowAny,IsAuthenticated,IsAdminUser
@@ -106,23 +105,25 @@ class ManageEmployee(RetrieveUpdateDestroyAPIView):
         return Employee.objects.get(id=id)
     
 
-class ChangePasswordView(UpdateAPIView):
+class ChangePasswordView(APIView):
     serializer_class=ChangePasswordSerializer
-    permission_classes=[AllowAny]
+    permission_classes=[IsAuthenticated]
 
 
-    def get_object(self):
-        user=self.request.user
-        return Employee.objects.get(id=user.pk)
-    
+    def put(self, request, *args, **kwargs):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"success": "Password updated successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-from faker import Faker
+# from faker import Faker
 
-def add_emp():
-    fake=Faker()
-    for _ in range(10):
-        id=fake.random_int(min=100000,max=999999)
-        name=fake.name()
-        email=fake.email()
-        print(id,name,email)
-        Employee.objects.create(id=id,full_name=name,email=email)
+# def add_emp():
+#     fake=Faker()
+#     for _ in range(10):
+#         id=fake.random_int(min=100000,max=999999)
+#         name=fake.name()
+#         email=fake.email()
+#         print(id,name,email)
+#         Employee.objects.create(id=id,full_name=name,email=email)
