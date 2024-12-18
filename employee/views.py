@@ -1,16 +1,20 @@
+from telnetlib import STATUS
 from django.shortcuts import render
 from rest_framework.generics import CreateAPIView,ListAPIView,UpdateAPIView,RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import AllowAny,IsAuthenticated,IsAdminUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer,TokenRefreshSerializer
 from django.utils.crypto import get_random_string
 from rest_framework.exceptions import NotFound
-
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 from .permissions import isAdmin
 
 from .models import Employee
 from django.db.models import Q
 from .serializers import LoginSerializer, ManageSerializer, ResetPasswordSerializer, SignupSerializer,ChangePasswordSerializer
-# Create your views here.
+import uuid
+from datetime import datetime
 
 
 class SignupView(CreateAPIView):
@@ -25,22 +29,36 @@ class SignupView(CreateAPIView):
         user.save()
 
 
-class ResetView(UpdateAPIView):
+class ResetView(APIView):
     serializer_class=ResetPasswordSerializer
-    permission_classes=[IsAuthenticated]
+    permission_classes=[AllowAny]
 
-    def get_object(self):
-        email=self.request.data.get('email')
+    def post(self, request, *args, **kwargs):
+        email=request.data['email']
+        if not Employee.objects.filter(email=email).exists():
+            return Response({"error":"Invaid user"},status=status.HTTP_404_NOT_FOUND)
+        
         try:
-           return Employee.objects.get(email=email)
-        except Employee.DoesNotExist:
-            raise NotFound("User Not Found")
-
-    def perform_update(self, serializer):
-        newPassword=get_random_string(12)
-        user=serializer.save()
-        user.set_password(newPassword)
-        user.save()
+            resetHash=self.kwargs['hash']
+            newPassword=request.data['password']
+            user=Employee.objects.get(email=email)
+            if len(newPassword)<8:
+                return Response({"error":"password should be atleast 8 character long"},status=status.HTTP_400_BAD_REQUEST)
+            elif user.hash==resetHash and user.timestamp>int(datetime.now().timestamp()):
+                user.set_password(newPassword)
+                user.save()
+                return Response({"success":"password changed successully"},status=status.HTTP_200_OK)
+            else:
+                return Response({"error":"link expired"},status=status.HTTP_400_BAD_REQUEST)
+        except:
+            resetHash=uuid.uuid4()
+            timestamp=int(datetime.now().timestamp())+15*60
+            user=Employee.objects.get(email=email)
+            user.hash=resetHash
+            user.timestamp=timestamp
+            user.save()
+            print(request.build_absolute_uri()+f"{resetHash}/")
+            return Response({"success":"email sent to your mail"},status=status.HTTP_200_OK)
 
 
 class ListEmployeeView(ListAPIView):
@@ -71,9 +89,21 @@ class ManageEmployee(RetrieveUpdateDestroyAPIView):
 
 class ChangePasswordView(UpdateAPIView):
     serializer_class=ChangePasswordSerializer
-    permission_classes=[IsAuthenticated]
+    permission_classes=[AllowAny]
 
-    def get_queryset(self):
+
+    def get_object(self):
         user=self.request.user
         return Employee.objects.get(id=user.pk)
     
+
+from faker import Faker
+
+def add_emp():
+    fake=Faker()
+    for _ in range(10):
+        id=fake.random_int(min=100000,max=999999)
+        name=fake.name()
+        email=fake.email()
+        print(id,name,email)
+        Employee.objects.create(id=id,full_name=name,email=email)

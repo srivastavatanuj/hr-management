@@ -11,6 +11,8 @@ class Employee(AbstractBaseUser,PermissionsMixin):
     id = models.CharField(max_length=50, unique=True,primary_key=True)
     full_name=models.CharField(max_length=100)
     email=models.EmailField(unique=True)
+    hash=models.CharField(max_length=50,blank=True,null=True)
+    timestamp=models.IntegerField(blank=True,null=True,default=0000)
     is_active=models.BooleanField(default=True)
     is_staff=models.BooleanField(default=False)
     is_superuser=models.BooleanField(default=False)

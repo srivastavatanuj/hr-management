@@ -5,17 +5,18 @@ class Organization(models.Model):
     # basic details
     name=models.CharField(max_length=255)
     domain=models.CharField(max_length=100,unique=True)
-    registration_number=models.CharField(max_length=50,unique=True,blank=True)
+    registration_number=models.CharField(max_length=50,unique=True,blank=True,primary_key=True)
     logo=models.ImageField(upload_to="org_logos",blank=True,null=True)
     industry_type=models.CharField(max_length=100)
     website=models.CharField(max_length=100,unique=True,blank=True)
     contact_email=models.EmailField()
     contact_phone=models.CharField(max_length=20)
+    date_created=models.DateField(auto_now_add=True)
 
     # admin details
-    date_created=models.DateField(auto_now_add=True)
-    is_active=models.BooleanField(default=True)
-    subscription_plan=models.CharField(max_length=50,choices=[('basic','basic'),('pro','pro'),('enterprise','enterprise')],default='basic')
+    
+    # is_active=models.BooleanField(default=True)
+    # subscription_plan=models.CharField(max_length=50,choices=[('basic','basic'),('pro','pro'),('enterprise','enterprise')],default='basic')
 
 
 
