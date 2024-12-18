@@ -21,12 +21,30 @@ class SignupView(CreateAPIView):
     serializer_class=SignupSerializer
     permission_classes=[IsAuthenticated,isAdmin]
 
-    def perform_create(self, serializer):
-        password=get_random_string(12)
-        print(password)
-        user=serializer.save()
+    # def perform_create(self, serializer):
+    #     password=get_random_string(12)
+    #     print(password)
+    #     user=serializer.save()
+    #     user.set_password(password)
+    #     user.save()
+    #     return Response({"password":password},status=status.HTTP_201_CREATED)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        password = get_random_string(12) 
+        user = serializer.save()
         user.set_password(password)
         user.save()
+
+        return Response(
+            {
+                "message": "User created successfully",
+                "password": password,
+            },
+            status=status.HTTP_201_CREATED,
+
+        )
 
 
 class ResetView(APIView):
@@ -57,8 +75,9 @@ class ResetView(APIView):
             user.hash=resetHash
             user.timestamp=timestamp
             user.save()
-            print(request.build_absolute_uri()+f"{resetHash}/")
-            return Response({"success":"email sent to your mail"},status=status.HTTP_200_OK)
+            reset_link=request.build_absolute_uri()+f"{resetHash}/"
+            print(reset_link)
+            return Response({"success":"email sent to your mail","link":reset_link},status=status.HTTP_200_OK)
 
 
 class ListEmployeeView(ListAPIView):
